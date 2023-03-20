@@ -12,7 +12,7 @@ public final class OnboardingController: UIViewController, UICollectionViewDataS
             return delegate?.window?.safeAreaInsets
         }
     }
-    let items: [OBFormConfig] = [
+    public var items: [OBFormConfig]! = [
         OBFormType.Select.Config("gender", "What is your gender", selectConfig: .init(options: .init(dictionaryLiteral: ("m", "Male"), ("f", "Female"), ("n", "None")), multipleChoice: true)),
         OBFormType.Select.Config("relationship", "What is your relationship status", selectConfig: .init(options: .init(dictionaryLiteral: ("0", "Single"), ("1", "In Relationship"), ("2", "Confused"), ("3", "Divorced"), ("4", "Widowed")), multipleChoice: false)),
         OBFormType.Phone.Config("phone", "What is your phone number", "Phone number"),
@@ -28,7 +28,7 @@ public final class OnboardingController: UIViewController, UICollectionViewDataS
     var prevButton: UIButton!
     var result: NSMutableDictionary = [:]
     
-    override func viewDidLoad() {
+    public override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .background
         
@@ -109,7 +109,7 @@ public final class OnboardingController: UIViewController, UICollectionViewDataS
         let container = UIView()
         
         nextButton = UIButton(configuration: .filled())
-        nextButton.configuration?.image = UIImage(named: "arrow")
+        nextButton.configuration?.image = UIImage(named: "arrow", in: Bundle.module, with: nil)
         nextButton.configuration?.cornerStyle = .capsule
         nextButton.configuration?.baseBackgroundColor = .gray
         nextButton.configurationUpdateHandler = { button in
@@ -126,7 +126,7 @@ public final class OnboardingController: UIViewController, UICollectionViewDataS
         prevButton.configuration?.baseBackgroundColor = .clear
         prevButton.configurationUpdateHandler = { button in
             var config = button.configuration
-            config?.image = UIImage(named: "arrow")?.withTintColor(button.isEnabled ? .accent : .gray)
+            config?.image = UIImage(named: "arrow", in: Bundle.module, with: nil)?.withTintColor(button.isEnabled ? .accent : .gray)
             button.configuration = config
         }
         prevButton.addTarget(self, action: #selector(prevPage), for: .touchUpInside)
@@ -181,11 +181,11 @@ public final class OnboardingController: UIViewController, UICollectionViewDataS
     
     // MARK: - OB Delegate Functions
     
-    func OBControllerToggleReadyState(ready: Bool) {
+    public func OBControllerToggleReadyState(ready: Bool) {
         self.nextButton.isEnabled = ready
     }
     
-    func OBControllerUpdateValueForKey(key: String, value: Any) {
+    public func OBControllerUpdateValueForKey(key: String, value: Any) {
         if let current = items.first(where: { $0.key == key}) {
             if current.type == .Select {
                 if let currentValue = result.value(forKey: current.key) {
@@ -205,7 +205,7 @@ public final class OnboardingController: UIViewController, UICollectionViewDataS
     
     // MARK: - Delegate functions
     
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+    public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let item = items[indexPath.row]
         cell = (collectionView.dequeueReusableCell(withReuseIdentifier: "base_cell", for: indexPath) as? OnboardingCell)!
         cell.build(item)
@@ -214,24 +214,24 @@ public final class OnboardingController: UIViewController, UICollectionViewDataS
         return cell
     }
     
-    func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+    public func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
         indicate(indexPath.row)
         (cell as? OnboardingCell)!.becomeActive(items[indexPath.row])
     }
     
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+    public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return items.count
     }
     
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+    public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         return CGSize(width: collectionView.frame.width, height: collectionView.frame.height - safeAreaInset!.bottom)
     }
     
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+    public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
         return 0
     }
     
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
+    public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
         return 0
     }
 }

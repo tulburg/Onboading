@@ -383,7 +383,7 @@ class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCod
     }
 }
 
-enum OBFormType: String {
+public enum OBFormType: String {
     case Name
     case Username
     case Email
@@ -392,31 +392,31 @@ enum OBFormType: String {
     case Phone
     case Select
     
-    func Config(_ key: String, _ title: String, _ placeholder: String) -> OBFormConfig {
+    public func Config(_ key: String, _ title: String, _ placeholder: String) -> OBFormConfig {
         return .init(key: key, type: self, title: title, placeholder: placeholder)
     }
     
-    func Config(_ key: String, _ title: String, datePickerConfig: OBDatePickerConfig) -> OBFormConfig {
+    public func Config(_ key: String, _ title: String, datePickerConfig: OBDatePickerConfig) -> OBFormConfig {
         return .init(key: key, type: self, title: title, datePickerConfig: datePickerConfig)
     }
     
-    func Config(_ key: String, _ title: String, selectConfig: OBSelectConfig) -> OBFormConfig {
+    public func Config(_ key: String, _ title: String, selectConfig: OBSelectConfig) -> OBFormConfig {
         return .init(key: key, type: self, title: title, selectConfig: selectConfig)
     }
 }
 
-struct OBDatePickerConfig {
+public struct OBDatePickerConfig {
     var minDate: Date?
     var maxDate: Date?
     var date: Date
 }
 
-struct OBSelectConfig {
+public struct OBSelectConfig {
     var options: KeyValuePairs<String, String>
     var multipleChoice: Bool?
 }
 
-struct OBFormConfig {
+public struct OBFormConfig {
     var key: String
     var type: OBFormType
     var title: String
@@ -425,7 +425,7 @@ struct OBFormConfig {
     var selectConfig: OBSelectConfig?
 }
 
-protocol OBDelegate {
+public protocol OBDelegate {
     func OBControllerToggleReadyState(ready: Bool)
     func OBControllerUpdateValueForKey(key: String, value: Any)
 }

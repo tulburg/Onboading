@@ -20,8 +20,7 @@ public final class CountryManager {
 
     /// - Returns: Country array
     public func getCountries() -> [Country] {
-        
-        guard let path = Bundle.main.path(forResource: "countries", ofType: "json"),
+        guard let path = Bundle.module.path(forResource: "countries", ofType: "json"),
               let data = try? Data(contentsOf: URL(fileURLWithPath: path)) else { return [] }
         return (try? JSONDecoder().decode([Country].self, from: data)) ?? []
     }

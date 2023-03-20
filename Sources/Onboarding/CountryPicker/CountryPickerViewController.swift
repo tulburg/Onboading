@@ -77,7 +77,7 @@ public final class CountryPickerViewController: UIViewController {
         let iconView = UIImageView(frame: CGRect(x: iconPadding, y: 0, width: iconHeight, height: iconHeight))
         iconView.image = CountryManager.shared.config.searchBarLeftImage ?? UIImage(
             named: "02Icons16X16Search",
-            in: .main,
+            in: .module,
             compatibleWith: nil
         )
         outerView.addSubview(iconView)
