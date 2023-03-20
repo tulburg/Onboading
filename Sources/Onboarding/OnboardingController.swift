@@ -1,7 +1,7 @@
 import UIKit
 
 @available(iOS 15, *)
-class OnboardingController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, OBDelegate {
+public final class OnboardingController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, OBDelegate {
     
     var collectionView: UICollectionView!
     var indicator: UIView!
