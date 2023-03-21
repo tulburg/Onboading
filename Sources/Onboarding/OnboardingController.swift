@@ -22,6 +22,8 @@ public final class OnboardingController: UIViewController, UICollectionViewDataS
         OBFormType.Username.Config("username", "Choose your username", "Username"),
         OBFormType.Email.Config("email", "What is your email address?", "Email address")
     ]
+    public var accentColor: UIColor = .accent
+    public var primaryColor: UIColor = .primary
     var cell: OnboardingCell!
     var navPanel: UIView!
     var nextButton: UIButton!
@@ -94,7 +96,7 @@ public final class OnboardingController: UIViewController, UICollectionViewDataS
                 c.constant = size
             }
             child.layer.cornerRadius = size / 2
-            child.backgroundColor = size == 10 ? .lightGray : .accent
+            child.backgroundColor = size == 10 ? .lightGray : accentColor
             self.indicator.layoutIfNeeded()
         }
         
@@ -114,7 +116,7 @@ public final class OnboardingController: UIViewController, UICollectionViewDataS
         nextButton.configuration?.baseBackgroundColor = .gray
         nextButton.configurationUpdateHandler = { button in
             var config = button.configuration
-            config?.baseBackgroundColor = button.isEnabled ? .accent : .gray
+            config?.baseBackgroundColor = button.isEnabled ? self.accentColor : .gray
             button.configuration = config
         }
         nextButton.addTarget(self, action: #selector(nextPage), for: .touchUpInside)
@@ -126,7 +128,7 @@ public final class OnboardingController: UIViewController, UICollectionViewDataS
         prevButton.configuration?.baseBackgroundColor = .clear
         prevButton.configurationUpdateHandler = { button in
             var config = button.configuration
-            config?.image = UIImage(named: "arrow", in: Bundle.module, with: nil)?.withTintColor(button.isEnabled ? .accent : .gray)
+            config?.image = UIImage(named: "arrow", in: Bundle.module, with: nil)?.withTintColor(button.isEnabled ? self.accentColor : .gray)
             button.configuration = config
         }
         prevButton.addTarget(self, action: #selector(prevPage), for: .touchUpInside)
