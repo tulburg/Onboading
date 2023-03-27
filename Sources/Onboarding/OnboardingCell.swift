@@ -8,13 +8,13 @@
 import UIKit
 
 @available(iOS 15, *)
-class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCodeProtocol, CountryPickerDelegate, UITableViewDelegate, UITableViewDataSource {
+public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCodeProtocol, CountryPickerDelegate, UITableViewDelegate, UITableViewDataSource {
     
     var textInput: UITextField!
     var datePicker: UIDatePicker!
     var question: String!
     var config: OBFormConfig!
-    var delegate: OBDelegate!
+    public var delegate: OBDelegate!
     var phoneInput: UITextField!
     var tableView: UITableView!
     var selectedCountry: Country!
@@ -42,7 +42,7 @@ class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCod
         contentView.backgroundColor = .background
     }
     
-    func build(_ config: OBFormConfig) {
+    public func build(_ config: OBFormConfig) {
         self.config = config
         questionLabel.text = config.title
         textInput.placeholder = config.placeholder
@@ -118,7 +118,7 @@ class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCod
         contentView.constrain(type: .horizontalFill, line)
     }
     
-    override func prepareForReuse() {
+    public override func prepareForReuse() {
         contentView.removeConstraints(contentView.constraints)
         [questionLabel, inputContainer, verificationCode, dateContainer, phoneContainer, selectContainer].forEach{ $0?.isHidden = true }
         contentView.subviews.forEach { $0.removeFromSuperview() }
@@ -128,13 +128,13 @@ class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCod
         super.init(coder: coder)
     }
     
-    func buildQuestion() -> UILabel {
+    public func buildQuestion() -> UILabel {
         let label = UILabel("", .titleText, .systemFont(ofSize: 28, weight: .semibold))
         label.numberOfLines = 3
         return label
     }
     
-    func buildTextInput() -> UIView {
+    public func buildTextInput() -> UIView {
         let container = UIView()
         let line = UIView()
         line.backgroundColor = .gray
@@ -148,7 +148,7 @@ class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCod
         return container
     }
     
-    func buildVerificationCode() -> VerificationCode {
+    public func buildVerificationCode() -> VerificationCode {
         let verificationCode = VerificationCode(6, itemWidth: (contentView.frame.width / 6) - 16 )
         verificationCode.textColor = .blackWhite
         verificationCode.delegate = self
@@ -156,7 +156,7 @@ class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCod
         return verificationCode
     }
     
-    func buildDatePicker() -> UIView {
+    public func buildDatePicker() -> UIView {
         let container = UIView()
         
         datePicker = UIDatePicker()
@@ -176,7 +176,7 @@ class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCod
         return container
     }
     
-    func buildPhone() -> UIView {
+    public func buildPhone() -> UIView {
         let container = UIView()
         let country = UIView()
         country.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(chooseCountry)))
@@ -207,7 +207,7 @@ class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCod
         return container
     }
     
-    func buildSelect() -> UIView {
+    public func buildSelect() -> UIView {
         tableView = UITableView()
         tableView.delegate = self
         tableView.dataSource = self
@@ -218,21 +218,21 @@ class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCod
         return tableView
     }
     
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+    public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesBegan(touches, with: event)
         hideKeyboard()
     }
     
-    func textFieldDidChangeSelection(_ textField: UITextField) {
+    public func textFieldDidChangeSelection(_ textField: UITextField) {
         checkReadyState(config)
     }
     
-    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+    public func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         checkReadyState(config)
         return true
     }
     
-    func checkReadyState(_ config: OBFormConfig) {
+    public func checkReadyState(_ config: OBFormConfig) {
         if config.type == .Name {
             self.delegate?.OBControllerToggleReadyState(ready: textInput.text!.count > 0)
             self.delegate?.OBControllerUpdateValueForKey(key: config.key, value: textInput.text!)
@@ -265,7 +265,7 @@ class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCod
         }
     }
     
-    func hideKeyboard() {
+    public func hideKeyboard() {
         if textInput.isFirstResponder {
             textInput.resignFirstResponder()
         }
@@ -277,11 +277,11 @@ class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCod
         }
     }
     
-    func shouldSubmit() -> Bool {
+    public func shouldSubmit() -> Bool {
         return true
     }
     
-    func becomeActive(_ config: OBFormConfig) {
+    public func becomeActive(_ config: OBFormConfig) {
         DispatchQueue.main.async { [self] in
             if config.type == .Name || config.type == .Username || config.type == .Email {
                 textInput.becomeFirstResponder()
@@ -296,7 +296,7 @@ class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCod
         checkReadyState(config)
     }
     
-    func resignActive(_ config: OBFormConfig) {
+    public func resignActive(_ config: OBFormConfig) {
         DispatchQueue.main.async { [self] in
             if config.type == .Name || config.type == .Username || config.type == .Email {
                 textInput.resignFirstResponder()
@@ -310,7 +310,7 @@ class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCod
         }
     }
     
-    func textFieldValueChanged(_ textField: VerificationCode) {
+    public func textFieldValueChanged(_ textField: VerificationCode) {
         guard let count = textField.text?.count, count != 0 else {
             textField.resignFirstResponder()
             return
@@ -340,7 +340,7 @@ class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCod
         }
     }
     
-    func countryPicker(didSelect country: Country) {
+    public func countryPicker(didSelect country: Country) {
         countryCode.text = country.isoCode.getFlag() + " +" + country.phoneCode
         selectedCountry = country
         DispatchQueue.main.async {
@@ -349,7 +349,7 @@ class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCod
         checkReadyState(config)
     }
     
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         if let selectConfig = config.selectConfig {
             let cell = tableView.dequeueReusableCell(withIdentifier: (config.selectConfig?.multipleChoice)! ? "ob_select_cell_multiple" : "ob_select_cell") as? OBSelectCell
             if let item = config.selectConfig?.options[indexPath.row] {
@@ -360,11 +360,11 @@ class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCod
         return UITableViewCell()
     }
     
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return config.selectConfig?.options.count ?? 0
     }
     
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let cell = tableView.cellForRow(at: indexPath) as? OBSelectCell
         self.delegate?.OBControllerToggleReadyState(ready: true)
         if let item = config.selectConfig?.options[indexPath.row] {
@@ -373,7 +373,7 @@ class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCod
         cell?.check()
     }
     
-    func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
+    public func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
         let cell = tableView.cellForRow(at: indexPath) as? OBSelectCell
         self.delegate?.OBControllerToggleReadyState(ready: false)
         if let item = config.selectConfig?.options[indexPath.row] {
@@ -409,11 +409,20 @@ public struct OBDatePickerConfig {
     var minDate: Date?
     var maxDate: Date?
     var date: Date
+    public init(minDate: Date?, maxDate: Date?, date: Date) {
+        self.minDate = minDate
+        self.maxDate = maxDate
+        self.date = date
+    }
 }
 
 public struct OBSelectConfig {
     var options: KeyValuePairs<String, String>
     var multipleChoice: Bool?
+    public init(options: KeyValuePairs<String, String>, multipleChoice: Bool?) {
+        self.options = options
+        self.multipleChoice = multipleChoice
+    }
 }
 
 public struct OBFormConfig {
@@ -431,7 +440,7 @@ public protocol OBDelegate {
 }
 
 @available(iOS 13.0, *)
-class OBSelectCell: UITableViewCell {
+public class OBSelectCell: UITableViewCell {
     
     var label: UILabel!
     var checkView: UIView!
@@ -464,7 +473,7 @@ class OBSelectCell: UITableViewCell {
         contentView.constrain(type: .horizontalFill, line)
     }
     
-    func build(key: String, title: String, isMultiple: Bool) {
+    public func build(key: String, title: String, isMultiple: Bool) {
         label.text = title
     }
     

@@ -3,7 +3,7 @@ import UIKit
 @available(iOS 15, *)
 public final class OnboardingController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, OBDelegate {
     
-    var collectionView: UICollectionView!
+    public var collectionView: UICollectionView!
     var indicator: UIView!
     var indicatorLastPosition: Int?
     var safeAreaInset: UIEdgeInsets? {
@@ -16,7 +16,7 @@ public final class OnboardingController: UIViewController, UICollectionViewDataS
         OBFormType.Select.Config("gender", "What is your gender", selectConfig: .init(options: .init(dictionaryLiteral: ("m", "Male"), ("f", "Female"), ("n", "None")), multipleChoice: true)),
         OBFormType.Select.Config("relationship", "What is your relationship status", selectConfig: .init(options: .init(dictionaryLiteral: ("0", "Single"), ("1", "In Relationship"), ("2", "Confused"), ("3", "Divorced"), ("4", "Widowed")), multipleChoice: false)),
         OBFormType.Phone.Config("phone", "What is your phone number", "Phone number"),
-        OBFormType.Date.Config("dob", "Choose your date of birth", datePickerConfig: .init(date: Date())),
+        OBFormType.Date.Config("dob", "Choose your date of birth", datePickerConfig: .init(minDate: nil, maxDate: nil, date: Date())),
         OBFormType.VerificationCode.Config("code", "Enter the verification code", "Code"),
         OBFormType.Name.Config("name", "What's your full name?", "Fullname"),
         OBFormType.Username.Config("username", "Choose your username", "Username"),
