@@ -14,7 +14,7 @@ public final class OnboardingController: UIViewController, UICollectionViewDataS
     }
     public var items: [OBFormConfig]! = [
         OBFormType.Select.Config("gender", "What is your gender", selectConfig: .init(options: .init(dictionaryLiteral: ("m", "Male"), ("f", "Female"), ("n", "None")), multipleChoice: true)),
-        OBFormType.Select.Config("relationship", "What is your relationship status", selectConfig: .init(options: .init(dictionaryLiteral: ("0", "Single"), ("1", "In Relationship"), ("2", "Confused"), ("3", "Divorced"), ("4", "Widowed")), multipleChoice: false)),
+        OBFormType.Select.Config("relationship", "What is your relationship status", selectConfig: .init(options: ["0": "Single", "1": "In Relationship", "2": "Confused", "3": "Divorced", "4": "Widowed"], multipleChoice: false)),
         OBFormType.Phone.Config("phone", "What is your phone number", "Phone number"),
         OBFormType.Date.Config("dob", "Choose your date of birth", datePickerConfig: .init(minDate: nil, maxDate: nil, date: Date())),
         OBFormType.VerificationCode.Config("code", "Enter the verification code", "Code"),
@@ -189,20 +189,23 @@ public final class OnboardingController: UIViewController, UICollectionViewDataS
     
     public func OBControllerUpdateValueForKey(key: String, value: Any) {
         if let current = items.first(where: { $0.key == key}) {
-            if current.type == .Select {
-                if let currentValue = result.value(forKey: current.key) {
-                    var items: [Any] = currentValue as! [Any]
-                    items.append(value as! (String, String))
-                    result.setValue(items, forKey: current.key)
+            if current.type == .Select && (current.selectConfig?.multipleChoice)! {
+                if let currentValue: NSMutableDictionary = result.value(forKey: current.key) as? NSMutableDictionary {
+                    if let record = value as? (key: String, value: String) {
+                        currentValue.setValue(record.value, forKey: record.key)
+                        result.setValue(currentValue, forKey: current.key)
+                    }
                 }else {
-                    let items = [value]
-                    result.setValue(items, forKey: current.key)
+                    if let record = value as? (key: String, value: String) {
+                        let item = NSMutableDictionary()
+                        item.setValue(record.value, forKey: record.key)
+                        result.setValue(item, forKey: current.key)
+                    }
                 }
             }else {
                 result.setValue(value, forKey: key)
             }
         }
-        
     }
     
     // MARK: - Delegate functions

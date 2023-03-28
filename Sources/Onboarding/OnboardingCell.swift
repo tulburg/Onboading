@@ -10,7 +10,7 @@ import UIKit
 @available(iOS 15, *)
 public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCodeProtocol, CountryPickerDelegate, UITableViewDelegate, UITableViewDataSource {
     
-    var textInput: UITextField!
+    public var textInput: UITextField!
     var datePicker: UIDatePicker!
     var question: String!
     var config: OBFormConfig!
@@ -19,7 +19,7 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
     var tableView: UITableView!
     var selectedCountry: Country!
     
-    var questionLabel: UILabel!
+    public var questionLabel: UILabel!
     var inputContainer: UIView!
     var verificationCode: VerificationCode!
     var dateContainer: UIView!
@@ -28,6 +28,7 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
     var phoneContainer: UIView!
     var countryCode: UILabel!
     var selectContainer: UIView!
+    var options: [(key: String, value: String)] = []
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -105,6 +106,10 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
         if config.type == .Select {
             questionLabel.isHidden = false
             selectContainer.isHidden = false
+            
+            config.selectConfig?.options.forEach {
+                options.append($0 as! (key: String, value: String))
+            }
             
             tableView.allowsMultipleSelection = (config.selectConfig?.multipleChoice)!
             contentView.add().vertical(24).view(questionLabel).gap(40)
@@ -215,6 +220,7 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
         tableView.register(OBSelectCell.self, forCellReuseIdentifier: "ob_select_cell")
         tableView.register(OBSelectCell.self, forCellReuseIdentifier: "ob_select_cell_multiple")
         tableView.separatorInset = .zero
+        tableView.alwaysBounceVertical = false
         return tableView
     }
     
@@ -352,9 +358,9 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         if let selectConfig = config.selectConfig {
             let cell = tableView.dequeueReusableCell(withIdentifier: (config.selectConfig?.multipleChoice)! ? "ob_select_cell_multiple" : "ob_select_cell") as? OBSelectCell
-            if let item = config.selectConfig?.options[indexPath.row] {
-                cell?.build(key: item.key, title: item.value, isMultiple: selectConfig.multipleChoice ?? false)
-            }
+            let item = options[indexPath.row]
+            cell?.build(key: item.key, title: item.value, isMultiple: selectConfig.multipleChoice ?? false)
+            
             return cell!
         }
         return UITableViewCell()
@@ -367,9 +373,8 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let cell = tableView.cellForRow(at: indexPath) as? OBSelectCell
         self.delegate?.OBControllerToggleReadyState(ready: true)
-        if let item = config.selectConfig?.options[indexPath.row] {
-            self.delegate?.OBControllerUpdateValueForKey(key: config.key, value: item)
-        }
+        let item = options[indexPath.row]
+        self.delegate?.OBControllerUpdateValueForKey(key: config.key, value: item)
         cell?.check()
     }
     
@@ -406,9 +411,9 @@ public enum OBFormType: String {
 }
 
 public struct OBDatePickerConfig {
-    var minDate: Date?
-    var maxDate: Date?
-    var date: Date
+    public var minDate: Date?
+    public var maxDate: Date?
+    public var date: Date
     public init(minDate: Date?, maxDate: Date?, date: Date) {
         self.minDate = minDate
         self.maxDate = maxDate
@@ -417,21 +422,21 @@ public struct OBDatePickerConfig {
 }
 
 public struct OBSelectConfig {
-    var options: KeyValuePairs<String, String>
-    var multipleChoice: Bool?
-    public init(options: KeyValuePairs<String, String>, multipleChoice: Bool?) {
+    public var options: NSDictionary
+    public var multipleChoice: Bool?
+    public init(options: NSDictionary, multipleChoice: Bool?) {
         self.options = options
         self.multipleChoice = multipleChoice
     }
 }
 
 public struct OBFormConfig {
-    var key: String
-    var type: OBFormType
-    var title: String
-    var placeholder: String?
-    var datePickerConfig: OBDatePickerConfig?
-    var selectConfig: OBSelectConfig?
+    public var key: String
+    public var type: OBFormType
+    public var title: String
+    public var placeholder: String?
+    public var datePickerConfig: OBDatePickerConfig?
+    public var selectConfig: OBSelectConfig?
 }
 
 public protocol OBDelegate {
@@ -442,10 +447,10 @@ public protocol OBDelegate {
 @available(iOS 13.0, *)
 public class OBSelectCell: UITableViewCell {
     
-    var label: UILabel!
-    var checkView: UIView!
-    var image: UIImageView!
-    var checked: Bool = false
+    public var label: UILabel!
+    public var checkView: UIView!
+    public var image: UIImageView!
+    public var checked: Bool = false
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         label = UILabel("", .text, .systemFont(ofSize: 20))
