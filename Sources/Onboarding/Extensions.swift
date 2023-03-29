@@ -213,3 +213,65 @@ extension UIView {
         case verticalCenter
     }
 }
+
+extension UITextView {
+    
+    override open var bounds: CGRect {
+        didSet {
+            self.resizePlaceholder()
+        }
+    }
+    
+    public var placeholder: String? {
+        get {
+            var placeholderText: String?
+            
+            if let placeholderLabel = self.viewWithTag(100) as? UILabel {
+                placeholderText = placeholderLabel.text
+            }
+            
+            return placeholderText
+        }
+        set {
+            if let placeholderLabel = self.viewWithTag(100) as! UILabel? {
+                placeholderLabel.text = newValue
+                placeholderLabel.sizeToFit()
+            } else {
+                self.addPlaceholder(newValue!)
+            }
+        }
+    }
+    
+    @objc public func textViewDidChange(_ sender: NSNotification) {
+        guard let textView = sender.object as? UITextView else { return }
+        if let placeholderLabel = textView.viewWithTag(100) as? UILabel {
+            placeholderLabel.isHidden = !textView.text.isEmpty
+        }
+    }
+    
+    private func resizePlaceholder() {
+        if let placeholderLabel = self.viewWithTag(100) as! UILabel? {
+            let labelX = self.textContainerInset.left + textContainer.lineFragmentPadding
+            let labelY = self.textContainerInset.top
+            let labelWidth = max(self.frame.width, 120)
+            let labelHeight = placeholderLabel.frame.height
+            placeholderLabel.frame = CGRect(x: labelX, y: labelY, width: labelWidth, height: labelHeight)
+        }
+    }
+    
+    private func addPlaceholder(_ placeholderText: String) {
+        let placeholderLabel = UILabel()
+        placeholderLabel.text = placeholderText
+        placeholderLabel.sizeToFit()
+        placeholderLabel.font = self.font
+        placeholderLabel.textColor = UIColor.lightGray
+        placeholderLabel.tag = 100
+        placeholderLabel.isHidden = !self.text.isEmpty
+        self.addSubview(placeholderLabel)
+        self.resizePlaceholder()
+        NotificationCenter.default.addObserver(self, selector: #selector(textViewDidChange),
+                                               name: NSNotification.Name("UITextViewTextDidChangeNotification"),
+                                               object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(textViewDidChange), name: NSNotification.Name("UITextViewTextDidChangeSelection"), object: nil)
+    }
+}

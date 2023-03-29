@@ -8,10 +8,12 @@
 import UIKit
 
 @available(iOS 15, *)
-public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCodeProtocol, CountryPickerDelegate, UITableViewDelegate, UITableViewDataSource {
+public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCodeProtocol, CountryPickerDelegate, UITableViewDelegate, UITableViewDataSource, UITextViewDelegate, UIPickerViewDataSource, UIPickerViewDelegate {
     
     public var textInput: UITextField!
+    public var textView: UITextView!
     var datePicker: UIDatePicker!
+    var rangePicker: UIPickerView!
     var question: String!
     var config: OBFormConfig!
     public var delegate: OBDelegate!
@@ -28,7 +30,9 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
     var phoneContainer: UIView!
     var countryCode: UILabel!
     var selectContainer: UIView!
-    var options: [(key: String, value: String)] = []
+    var textViewContainer: UIView!
+    var rangeContainer: UIView!
+    public var rangeLabel: UILabel!
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -39,6 +43,8 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
         dateContainer = buildDatePicker()
         phoneContainer = buildPhone()
         selectContainer = buildSelect()
+        textViewContainer = buildTextView()
+        rangeContainer = buildRange()
         
         contentView.backgroundColor = .background
     }
@@ -89,7 +95,7 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
             }
             selectedDate = datePicker.date
             
-            contentView.add().vertical(24).view(questionLabel).gap(40)
+            contentView.add().vertical(24).view(questionLabel).gap(0)
                 .view(dateContainer).end(">=24")
             contentView.constrain(type: .horizontalFill, questionLabel, dateContainer, margin: 24)
         }
@@ -107,14 +113,29 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
             questionLabel.isHidden = false
             selectContainer.isHidden = false
             
-            config.selectConfig?.options.forEach {
-                options.append($0 as! (key: String, value: String))
-            }
-            
             tableView.allowsMultipleSelection = (config.selectConfig?.multipleChoice)!
             contentView.add().vertical(24).view(questionLabel).gap(40)
-                .view(selectContainer).end(0)
+                .view(selectContainer).end(safeAreaInsets.bottom + 126)
             contentView.constrain(type: .horizontalFill, questionLabel, selectContainer, margin: 24)
+        }
+        
+        if config.type == .LargeText {
+            questionLabel.isHidden = false
+            textViewContainer.isHidden = false
+            textView.placeholder = config.placeholder
+            contentView.add().vertical(24).view(questionLabel).gap(24)
+                .view(textViewContainer, ">=96").end(">=24")
+            contentView.constrain(type: .horizontalFill, questionLabel, textViewContainer, margin: 24)
+        }
+        
+        if config.type == .Range {
+            rangeContainer.isHidden = false
+            questionLabel.isHidden = false
+            rangePicker.selectRow(config.range!.count / 2, inComponent: 0, animated: false)
+            
+            contentView.add().vertical(24).view(questionLabel).gap(0)
+                .view(rangeContainer).end(">=24")
+            contentView.constrain(type: .horizontalFill, questionLabel, rangeContainer, margin: 24)
         }
         
         let line = UIView()
@@ -125,7 +146,7 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
     
     public override func prepareForReuse() {
         contentView.removeConstraints(contentView.constraints)
-        [questionLabel, inputContainer, verificationCode, dateContainer, phoneContainer, selectContainer].forEach{ $0?.isHidden = true }
+        [questionLabel, inputContainer, verificationCode, dateContainer, phoneContainer, selectContainer, textViewContainer, rangeContainer].forEach{ $0?.isHidden = true }
         contentView.subviews.forEach { $0.removeFromSuperview() }
     }
     
@@ -150,6 +171,20 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
         textInput.font = .systemFont(ofSize: 28, weight: .semibold)
         container.add().vertical(0).view(textInput, 40).gap(0).view(line, 2).end(0)
         container.constrain(type: .horizontalFill, textInput, line)
+        return container
+    }
+    
+    public func buildTextView() -> UIView {
+        let container = UIView()
+        container.layer.cornerRadius = 12
+        container.backgroundColor = .separatorLight
+        textView = UITextView()
+        textView.backgroundColor = UIColor.clear
+        textView.textColor = .darkText
+        textView.delegate = self
+        textView.font = .systemFont(ofSize: 17)
+        container.add().vertical(16).view(textView, 96).end(16)
+        container.constrain(type: .horizontalFill, textView, margin: 16)
         return container
     }
     
@@ -224,6 +259,51 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
         return tableView
     }
     
+    public func buildRange() -> UIView {
+        let container = UIView()
+        rangePicker = UIPickerView()
+        rangePicker.dataSource = self
+        rangePicker.delegate = self
+        rangePicker.backgroundColor = .background
+        rangePicker.clipsToBounds = true
+        rangePicker.inputView?.tintColor = .accent
+        rangeLabel = UILabel("", .accent, .systemFont(ofSize: 28, weight: .semibold))
+        container.add().vertical(0).view(rangeLabel, 32).gap(0).view(rangePicker, 320).end(">=0")
+        container.constrain(type: .horizontalFill, rangeLabel, rangePicker)
+        return container
+    }
+    
+    // MARK: - Picker delegate functions
+    
+    public func pickerView(_ pickerView: UIPickerView, viewForRow row: Int, forComponent component: Int, reusing view: UIView?) -> UIView {
+        let item = config.range![row]
+        if view != nil {
+            (view as? PickerView)?.label.text = item as? String
+            return view!
+        }
+        let pickerView = PickerView()
+        pickerView.label.text = item as? String
+        return pickerView
+    }
+    
+    public func numberOfComponents(in pickerView: UIPickerView) -> Int {
+        return 1
+    }
+    
+    public func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
+        return config.range!.count
+    }
+    
+    public func pickerView(_ pickerView: UIPickerView, rowHeightForComponent component: Int) -> CGFloat {
+        return 48
+    }
+    
+    public func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+        delegate?.OBControllerToggleReadyState(ready: true)
+        delegate?.OBControllerUpdateValueForKey(key: config.key, value: config.range![row])
+        rangeLabel.text = "\(config.range![row])"
+    }
+    
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesBegan(touches, with: event)
         hideKeyboard()
@@ -269,6 +349,11 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
             self.delegate?.OBControllerToggleReadyState(ready: phoneInput.text!.count > 5)
             self.delegate?.OBControllerUpdateValueForKey(key: config.key, value: "+" + selectedCountry.phoneCode +  phoneInput.text!)
         }
+        
+        if config.type == .LargeText {
+            self.delegate?.OBControllerToggleReadyState(ready: textView.text!.count > 0)
+            self.delegate?.OBControllerUpdateValueForKey(key: config.key, value: textView.text!)
+        }
     }
     
     public func hideKeyboard() {
@@ -280,6 +365,9 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
         }
         if phoneInput.isFirstResponder {
             phoneInput.resignFirstResponder()
+        }
+        if textView.isFirstResponder {
+            textView.resignFirstResponder()
         }
     }
     
@@ -298,6 +386,9 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
             if config.type == .VerificationCode {
                 self.verificationCode.becomeFirstResponder()
             }
+            if config.type == .LargeText {
+                textView.becomeFirstResponder()
+            }
         }
         checkReadyState(config)
     }
@@ -313,8 +404,13 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
             if config.type == .VerificationCode {
                 self.verificationCode.resignFirstResponder()
             }
+            if config.type == .LargeText {
+                textView.resignFirstResponder()
+            }
         }
     }
+    
+    // MARK: - Text delegate functions
     
     public func textFieldValueChanged(_ textField: VerificationCode) {
         guard let count = textField.text?.count, count != 0 else {
@@ -328,6 +424,17 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
             delegate?.OBControllerToggleReadyState(ready: false)
             self.delegate?.OBControllerUpdateValueForKey(key: config.key, value: textField.text!)
         }
+    }
+    
+    public func textViewDidChange(_ textView: UITextView) {
+        if textView.text.count > 0 {
+            delegate?.OBControllerToggleReadyState(ready: false)
+            self.delegate?.OBControllerUpdateValueForKey(key: config.key, value: textView.text!)
+        }else {
+            delegate?.OBControllerToggleReadyState(ready: true)
+            self.delegate?.OBControllerUpdateValueForKey(key: config.key, value: textView.text!)
+        }
+        checkReadyState(config)
     }
     
     @objc func datePickerChanged(_ sender: UIDatePicker, value: Any) {
@@ -358,8 +465,8 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         if let selectConfig = config.selectConfig {
             let cell = tableView.dequeueReusableCell(withIdentifier: (config.selectConfig?.multipleChoice)! ? "ob_select_cell_multiple" : "ob_select_cell") as? OBSelectCell
-            let item = options[indexPath.row]
-            cell?.build(key: item.key, title: item.value, isMultiple: selectConfig.multipleChoice ?? false)
+            let item = config.selectConfig!.options[indexPath.row]
+            cell?.build(key: item.0, title: item.1, isMultiple: selectConfig.multipleChoice ?? false)
             
             return cell!
         }
@@ -373,7 +480,7 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let cell = tableView.cellForRow(at: indexPath) as? OBSelectCell
         self.delegate?.OBControllerToggleReadyState(ready: true)
-        let item = options[indexPath.row]
+        let item = config.selectConfig!.options[indexPath.row]
         self.delegate?.OBControllerUpdateValueForKey(key: config.key, value: item)
         cell?.check()
     }
@@ -381,7 +488,7 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
     public func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
         let cell = tableView.cellForRow(at: indexPath) as? OBSelectCell
         self.delegate?.OBControllerToggleReadyState(ready: false)
-        if let item = config.selectConfig?.options[indexPath.row] {
+        if let item = config.selectConfig?.options {
             self.delegate?.OBControllerUpdateValueForKey(key: config.key, value: item)
         }
         cell?.uncheck()
@@ -396,6 +503,8 @@ public enum OBFormType: String {
     case Date
     case Phone
     case Select
+    case LargeText
+    case Range
     
     public func Config(_ key: String, _ title: String, _ placeholder: String) -> OBFormConfig {
         return .init(key: key, type: self, title: title, placeholder: placeholder)
@@ -407,6 +516,10 @@ public enum OBFormType: String {
     
     public func Config(_ key: String, _ title: String, selectConfig: OBSelectConfig) -> OBFormConfig {
         return .init(key: key, type: self, title: title, selectConfig: selectConfig)
+    }
+    
+    public func Config(_ key: String, _ title: String, range: Array<Any>) -> OBFormConfig {
+        return .init(key: key, type: self, title: title, range: range)
     }
 }
 
@@ -422,11 +535,15 @@ public struct OBDatePickerConfig {
 }
 
 public struct OBSelectConfig {
-    public var options: NSDictionary
+    public var options: [(String, String)]
     public var multipleChoice: Bool?
-    public init(options: NSDictionary, multipleChoice: Bool?) {
+    public var minSelection: Int?
+    public var maxSelection: Int?
+    public init(options: [(String, String)], multipleChoice: Bool?, minSelection: Int?, maxSelection: Int?) {
         self.options = options
         self.multipleChoice = multipleChoice
+        self.minSelection = minSelection
+        self.maxSelection = maxSelection
     }
 }
 
@@ -435,6 +552,7 @@ public struct OBFormConfig {
     public var type: OBFormType
     public var title: String
     public var placeholder: String?
+    public var range: Array<Any>?
     public var datePickerConfig: OBDatePickerConfig?
     public var selectConfig: OBSelectConfig?
 }
@@ -497,3 +615,24 @@ public class OBSelectCell: UITableViewCell {
     }
 }
 
+@available(iOS 13.0, *)
+public class PickerView: UIView {
+    public var label: UILabel!
+    
+    public override init(frame: CGRect) {
+        super.init(frame: frame)
+        label = UILabel("Undefined", .darkText, .systemFont(ofSize: 28))
+        label.textAlignment = .center
+        addSubview(label)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    public override func layoutSubviews() {
+        super.layoutSubviews()
+        add().vertical(8).view(label, 32).end(8)
+        constrain(type: .horizontalFill, label, margin: 16)
+    }
+}
