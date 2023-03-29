@@ -33,6 +33,7 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
     var textViewContainer: UIView!
     var rangeContainer: UIView!
     public var rangeLabel: UILabel!
+    private var selection: NSMutableDictionary = [:]
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -481,16 +482,18 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
         let cell = tableView.cellForRow(at: indexPath) as? OBSelectCell
         self.delegate?.OBControllerToggleReadyState(ready: true)
         let item = config.selectConfig!.options[indexPath.row]
-        self.delegate?.OBControllerUpdateValueForKey(key: config.key, value: item)
+        selection.setValue(item.1, forKey: item.0)
+        self.delegate?.OBControllerUpdateValueForKey(key: config.key, value: selection)
         cell?.check()
     }
     
     public func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
         let cell = tableView.cellForRow(at: indexPath) as? OBSelectCell
-        self.delegate?.OBControllerToggleReadyState(ready: false)
         if let item = config.selectConfig?.options {
-            self.delegate?.OBControllerUpdateValueForKey(key: config.key, value: item)
+            selection.removeObject(forKey: item[indexPath.row].0)
+            self.delegate?.OBControllerUpdateValueForKey(key: config.key, value: selection)
         }
+        self.delegate?.OBControllerToggleReadyState(ready: selection.count > 0)
         cell?.uncheck()
     }
 }
@@ -539,11 +542,16 @@ public struct OBSelectConfig {
     public var multipleChoice: Bool?
     public var minSelection: Int?
     public var maxSelection: Int?
-    public init(options: [(String, String)], multipleChoice: Bool?, minSelection: Int?, maxSelection: Int?) {
+    public init(options: [(String, String)]) { self.options = options }
+    public init(options: [(String, String)], multipleChoice: Bool?) {
         self.options = options
         self.multipleChoice = multipleChoice
-        self.minSelection = minSelection
-        self.maxSelection = maxSelection
+    }
+    public init(options: [(String, String)], multipleChoice: Bool?, maxSelection: Int?, minSelection: Int?) {
+        self.options = options
+        self.multipleChoice = multipleChoice
+        self.maxSelection = maxSelection ?? 1
+        self.minSelection = minSelection ?? 1
     }
 }
 
