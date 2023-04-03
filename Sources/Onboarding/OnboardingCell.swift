@@ -141,9 +141,10 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
         if config.type == .LargeText {
             questionLabel.isHidden = false
             textViewContainer.isHidden = false
-            textView.placeholder = config.placeholder
             if value != nil {
                 textView.text = value as? String
+            }else {
+                textView.placeholder = config.placeholder
             }
             contentView.add().vertical(24).view(questionLabel).gap(24)
                 .view(textViewContainer, ">=96").end(">=24")
