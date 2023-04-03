@@ -191,6 +191,15 @@ public final class OnboardingController: UIViewController, UICollectionViewDataS
         result.setValue(value, forKey: key)
     }
     
+    public func OBControllerValueForKey(key: String) -> Any? {
+        return ""
+    }
+    
+    public func OBControllerShouldSelectPhoto() {
+        
+    }
+    
+    
     // MARK: - Delegate functions
     
     public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {

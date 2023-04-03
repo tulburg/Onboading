@@ -6,9 +6,10 @@
 //
 
 import UIKit
+import PhotosUI
 
 @available(iOS 15, *)
-public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCodeProtocol, CountryPickerDelegate, UITableViewDelegate, UITableViewDataSource, UITextViewDelegate, UIPickerViewDataSource, UIPickerViewDelegate {
+public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCodeProtocol, CountryPickerDelegate, UITableViewDelegate, UITableViewDataSource, UITextViewDelegate, UIPickerViewDataSource, UIPickerViewDelegate, UICollectionViewDelegate, UICollectionViewDataSource {
     
     public var textInput: UITextField!
     public var textView: UITextView!
@@ -34,6 +35,8 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
     var rangeContainer: UIView!
     public var rangeLabel: UILabel!
     private var selection: NSMutableDictionary = [:]
+    var photoContainer: UIView!
+    var photoCollectionView: UICollectionView!
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -46,6 +49,7 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
         selectContainer = buildSelect()
         textViewContainer = buildTextView()
         rangeContainer = buildRange()
+        photoContainer = buildPhotos()
         
         contentView.backgroundColor = .background
     }
@@ -54,7 +58,7 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
         self.config = config
         questionLabel.text = config.title
         textInput.placeholder = config.placeholder
-        
+        let value = delegate?.OBControllerValueForKey(key: config.key)
         if config.type == .Name {
             textInput.keyboardType = .default
             textInput.textContentType = .name
@@ -68,11 +72,12 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
         }else if config.type == .Phone {
             phoneInput.textContentType = .telephoneNumber
             phoneInput.keyboardType = .phonePad
+            if value != nil { phoneInput.text = value as? String }
         }
         if (config.type == .Name || config.type == .Email || config.type == .Username) {
             questionLabel.isHidden = false
             inputContainer.isHidden = false
-            
+            if value != nil { textInput.text = value as? String }
             contentView.add().vertical(24).view(questionLabel).gap(40)
                 .view(inputContainer, ">=40").end(">=24")
             contentView.constrain(type: .horizontalFill, questionLabel, inputContainer, margin: 24)
@@ -94,8 +99,12 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
                 datePicker.minimumDate = config.datePickerConfig?.minDate
                 datePicker.maximumDate = config.datePickerConfig?.maxDate
             }
+            if value != nil {
+                let date = Date.from(string: (value as? String)!)
+                datePicker.date = date!
+                dateLabel.text = date!.string(with: "d MMMM YYYY")
+            }
             selectedDate = datePicker.date
-            
             contentView.add().vertical(24).view(questionLabel).gap(0)
                 .view(dateContainer).end(">=24")
             contentView.constrain(type: .horizontalFill, questionLabel, dateContainer, margin: 24)
@@ -113,8 +122,17 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
         if config.type == .Select {
             questionLabel.isHidden = false
             selectContainer.isHidden = false
-            
             tableView.allowsMultipleSelection = (config.selectConfig?.multipleChoice)!
+            if let selected = value as? NSDictionary {
+                self.selection = selected.mutableCopy() as! NSMutableDictionary
+                selected.forEach { item in
+                    if let index = config.selectConfig?.options.firstIndex(where: { $0.0 == item.key as! String }) {
+                        DispatchQueue.main.async {
+                            self.tableView(self.tableView, didSelectRowAt: IndexPath(row: index, section: 0))
+                        }
+                    }
+                }
+            }
             contentView.add().vertical(24).view(questionLabel).gap(40)
                 .view(selectContainer).end(safeAreaInsets.bottom + 126)
             contentView.constrain(type: .horizontalFill, questionLabel, selectContainer, margin: 24)
@@ -124,6 +142,9 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
             questionLabel.isHidden = false
             textViewContainer.isHidden = false
             textView.placeholder = config.placeholder
+            if value != nil {
+                textView.text = value as? String
+            }
             contentView.add().vertical(24).view(questionLabel).gap(24)
                 .view(textViewContainer, ">=96").end(">=24")
             contentView.constrain(type: .horizontalFill, questionLabel, textViewContainer, margin: 24)
@@ -133,10 +154,25 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
             rangeContainer.isHidden = false
             questionLabel.isHidden = false
             rangePicker.selectRow(config.range!.count / 2, inComponent: 0, animated: false)
-            
+            if value != nil {
+                rangeLabel.text = value as? String
+                if let index = config.range?.firstIndex(where: { ($0 as? String) == (value as? String) }) {
+                    DispatchQueue.main.async {
+                        self.rangePicker.selectRow(index, inComponent: 0, animated: false)
+                    }
+                }
+            }
             contentView.add().vertical(24).view(questionLabel).gap(0)
                 .view(rangeContainer).end(">=24")
             contentView.constrain(type: .horizontalFill, questionLabel, rangeContainer, margin: 24)
+        }
+        
+        if config.type == .PhotoSelect {
+            questionLabel.isHidden = false
+            photoContainer.isHidden = false
+            contentView.add().vertical(24).view(questionLabel).gap(24)
+                .view(photoContainer).end(safeAreaInsets.bottom + 126)
+            contentView.constrain(type: .horizontalFill, questionLabel, photoContainer, margin: 24)
         }
         
         let line = UIView()
@@ -147,7 +183,7 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
     
     public override func prepareForReuse() {
         contentView.removeConstraints(contentView.constraints)
-        [questionLabel, inputContainer, verificationCode, dateContainer, phoneContainer, selectContainer, textViewContainer, rangeContainer].forEach{ $0?.isHidden = true }
+        [questionLabel, inputContainer, verificationCode, dateContainer, phoneContainer, selectContainer, textViewContainer, rangeContainer, photoContainer].forEach{ $0?.isHidden = true }
         contentView.subviews.forEach { $0.removeFromSuperview() }
     }
     
@@ -160,6 +196,8 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
         label.numberOfLines = 3
         return label
     }
+    
+    // MARK: - Build functions
     
     public func buildTextInput() -> UIView {
         let container = UIView()
@@ -274,6 +312,20 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
         return container
     }
     
+    public func buildPhotos() -> UIView {
+        let container = UIView()
+        let layout = DraggableCollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: (contentView.frame.width / 3) - 24, height: (contentView.frame.width / 3) - 24)
+        photoCollectionView = PhotoCollectionView(layout: layout)
+        photoCollectionView.delegate = self
+        photoCollectionView.dataSource = self
+        photoCollectionView.register(PhotoCell.self, forCellWithReuseIdentifier: "photo_cell")
+        container.addSubview(photoCollectionView)
+        container.constrain(type: .verticalFill, photoCollectionView)
+        container.constrain(type: .horizontalFill, photoCollectionView)
+        return container
+    }
+    
     // MARK: - Picker delegate functions
     
     public func pickerView(_ pickerView: UIPickerView, viewForRow row: Int, forComponent component: Int, reusing view: UIView?) -> UIView {
@@ -338,7 +390,8 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
         }
         if config.type == .Date {
             self.delegate?.OBControllerToggleReadyState(ready: true)
-            self.delegate?.OBControllerUpdateValueForKey(key: config.key, value: selectedDate!)
+            let value = selectedDate?.toString()
+            self.delegate?.OBControllerUpdateValueForKey(key: config.key, value: value!)
         }
         if config.type == .VerificationCode {
             self.delegate?.OBControllerToggleReadyState(ready: verificationCode.numel == verificationCode.text?.count)
@@ -496,6 +549,41 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
         self.delegate?.OBControllerToggleReadyState(ready: selection.count > 0)
         cell?.uncheck()
     }
+    
+    public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "photo_cell", for: indexPath) as! PhotoCell
+        cell.onSelect = {
+            self.delegate?.OBControllerShouldSelectPhoto!()
+        }
+        return cell
+    }
+    
+    public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return 6
+    }
+    
+    public func didSelectPhotos(_ results: [PHPickerResult]) {
+        let cells = self.photoCollectionView.visibleCells
+        (self.photoCollectionView as? PhotoCollectionView)?.items = []
+        guard results.count >= cells.count else { return }
+        delegate?.OBControllerToggleReadyState(ready: true)
+        cells.indices.forEach {
+            let result = results[$0]
+            let cell: PhotoCell = cells[$0] as! PhotoCell
+            if result.itemProvider.canLoadObject(ofClass: UIImage.self) {
+                result.itemProvider.loadObject(ofClass: UIImage.self) { image, error in
+                    if let error = error {
+                        print("Error loading image: \(error.localizedDescription)")
+                    } else if let finalImage = image as? UIImage {
+                        DispatchQueue.main.async {
+                            cell.imageView.image = finalImage
+                            (self.photoCollectionView as? PhotoCollectionView)?.items.append(finalImage)
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 public enum OBFormType: String {
@@ -508,6 +596,7 @@ public enum OBFormType: String {
     case Select
     case LargeText
     case Range
+    case PhotoSelect
     
     public func Config(_ key: String, _ title: String, _ placeholder: String) -> OBFormConfig {
         return .init(key: key, type: self, title: title, placeholder: placeholder)
@@ -565,9 +654,12 @@ public struct OBFormConfig {
     public var selectConfig: OBSelectConfig?
 }
 
-public protocol OBDelegate {
-    func OBControllerToggleReadyState(ready: Bool)
-    func OBControllerUpdateValueForKey(key: String, value: Any)
+@available(iOS 14.0, *)
+@objc public protocol OBDelegate {
+    @objc func OBControllerToggleReadyState(ready: Bool)
+    @objc func OBControllerUpdateValueForKey(key: String, value: Any)
+    @objc func OBControllerValueForKey(key: String) -> Any?
+    @objc optional func OBControllerShouldSelectPhoto()
 }
 
 @available(iOS 13.0, *)
@@ -642,5 +734,108 @@ public class PickerView: UIView {
         super.layoutSubviews()
         add().vertical(8).view(label, 32).end(8)
         constrain(type: .horizontalFill, label, margin: 16)
+    }
+}
+
+@available(iOS 14.0, *)
+class PhotoCell: UICollectionViewCell {
+    
+    var onSelect: (() -> Void)!
+    var imageView: UIImageView!
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        let container = UIView()
+        container.backgroundColor = .separatorLight
+        container.layer.cornerRadius = 12
+        let add = UIButton(type: .contactAdd)
+        add.tintColor = .primary
+        add.addTarget(self, action: #selector(selected), for: .touchUpInside)
+        imageView = UIImageView()
+        imageView.layer.cornerRadius = 12
+        imageView.clipsToBounds = true
+        imageView.contentMode = .scaleAspectFill
+        container.addSubview(add)
+        container.constrain(type: .verticalCenter, add)
+        container.constrain(type: .horizontalCenter, add)
+        container.addSubview(imageView)
+        container.constrain(type: .verticalFill, imageView)
+        container.constrain(type: .horizontalFill, imageView)
+        container.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(selected)))
+        contentView.addSubview(container)
+        contentView.constrain(type: .verticalFill, container)
+        contentView.constrain(type: .horizontalFill, container)
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+    }
+    
+    @objc func selected() {
+        onSelect()
+    }
+}
+
+class PhotoCollectionView: UICollectionView, UICollectionViewDropDelegate, UICollectionViewDragDelegate {
+    
+    var dragIndexPath: IndexPath?
+    var dropIndexPath: IndexPath?
+    var items: [UIImage] = []
+    
+    init(layout: DraggableCollectionViewFlowLayout) {
+        super.init(frame: .zero, collectionViewLayout: layout)
+        self.collectionViewLayout = layout
+        self.dragInteractionEnabled = true
+        self.dropDelegate = self
+        self.dragDelegate = self
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, performDropWith coordinator: UICollectionViewDropCoordinator) {
+        var destinationIndexPath: IndexPath!
+        if let indexPath = coordinator.destinationIndexPath {
+            destinationIndexPath = indexPath
+        }else {
+            let row = collectionView.numberOfItems(inSection: 0)
+            destinationIndexPath = IndexPath(row: row - 1, section: 0)
+        }
+        if coordinator.proposal.operation == .move {
+            reorderItems(coordinator, destinationIndexPath, collectionView)
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, dropSessionDidUpdate session: UIDropSession, withDestinationIndexPath destinationIndexPath: IndexPath?) -> UICollectionViewDropProposal {
+        if collectionView.hasActiveDrag {
+            return UICollectionViewDropProposal(operation: .move, intent: .insertAtDestinationIndexPath)
+        }
+        return UICollectionViewDropProposal(operation: .move)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, itemsForBeginning session: UIDragSession, at indexPath: IndexPath) -> [UIDragItem] {
+        self.dragIndexPath = indexPath
+        let itemProvider = NSItemProvider(object: "Some String" as NSString)
+        let dragItem = UIDragItem(itemProvider: itemProvider)
+        return [dragItem]
+    }
+    
+    func reorderItems(_ coordinator: UICollectionViewDropCoordinator, _ destination: IndexPath, _ collectionView: UICollectionView) {
+        if let item = coordinator.items.first {
+            if let sourceIndexPath = item.sourceIndexPath {
+                collectionView.performBatchUpdates {
+                    collectionView.deleteItems(at: [sourceIndexPath])
+                    collectionView.insertItems(at: [destination])
+                }
+                coordinator.drop(item.dragItem, toItemAt: destination)
+            }
+        }
+    }
+}
+
+class DraggableCollectionViewFlowLayout: UICollectionViewFlowLayout {
+    override func shouldInvalidateLayout(forBoundsChange newBounds: CGRect) -> Bool {
+        return true
     }
 }
