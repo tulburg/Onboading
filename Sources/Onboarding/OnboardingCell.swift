@@ -135,7 +135,8 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
             }
             contentView.add().vertical(24).view(questionLabel).gap(40)
                 .view(selectContainer).end(safeAreaInsets.bottom + 126)
-            contentView.constrain(type: .horizontalFill, questionLabel, selectContainer, margin: 24)
+            contentView.constrain(type: .horizontalFill, questionLabel, margin: 24)
+            contentView.constrain(type: .horizontalFill, selectContainer)
         }
         
         if config.type == .LargeText {
@@ -690,11 +691,11 @@ public class OBSelectCell: UITableViewCell {
         contentView.backgroundColor = .background
         let line = UIView()
         line.backgroundColor = .separatorLight
-        contentView.add().horizontal(8).view(label).view(checkView, 24).end(8)
+        contentView.add().horizontal(24).view(label).view(checkView, 24).end(24)
         contentView.add().vertical(">=0").view(checkView, 24).end(">=0")
         contentView.add().vertical(">=0").view(line, 1).end(0)
         contentView.constrain(type: .verticalCenter, label, checkView, margin: 12)
-        contentView.constrain(type: .horizontalFill, line)
+        contentView.constrain(type: .horizontalFill, line, margin: 24)
     }
     
     public func build(key: String, title: String, isMultiple: Bool) {
