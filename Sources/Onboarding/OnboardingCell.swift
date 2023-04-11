@@ -9,7 +9,7 @@ import UIKit
 import PhotosUI
 
 @available(iOS 15, *)
-public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, VerificationCodeProtocol, CountryPickerDelegate, UITableViewDelegate, UITableViewDataSource, UITextViewDelegate, UIPickerViewDataSource, UIPickerViewDelegate, UICollectionViewDelegate, UICollectionViewDataSource {
+public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, CountryPickerDelegate, UITableViewDelegate, UITableViewDataSource, UITextViewDelegate, UIPickerViewDataSource, UIPickerViewDelegate, UICollectionViewDelegate, UICollectionViewDataSource {
     
     public var textInput: UITextField!
     public var textView: UITextView!
@@ -24,7 +24,7 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
     
     public var questionLabel: UILabel!
     var inputContainer: UIView!
-    var verificationCode: CodeInputView!
+    var codeInput: CodeInputView!
     var dateContainer: UIView!
     var dateLabel: UILabel!
     var selectedDate: Date?
@@ -43,7 +43,7 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
         
         questionLabel = buildQuestion()
         inputContainer = buildTextInput()
-        verificationCode = buildVerificationCode()
+        codeInput = buildVerificationCode()
         dateContainer = buildDatePicker()
         phoneContainer = buildPhone()
         selectContainer = buildSelect()
@@ -84,11 +84,11 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
         }
         if (config.type == .VerificationCode) {
             questionLabel.isHidden = false
-            verificationCode.isHidden = false
+            codeInput.isHidden = false
             contentView.add().vertical(24).view(questionLabel).gap(40)
-                .view(verificationCode, 64).end(">=24")
+                .view(codeInput, 64).end(">=24")
             contentView.constrain(type: .horizontalFill, questionLabel, margin: 24)
-            contentView.add().horizontal(24).view(verificationCode).end(24)
+            contentView.add().horizontal(24).view(codeInput).end(24)
         }
         
         if (config.type == .Date) {
@@ -185,7 +185,7 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
     
     public override func prepareForReuse() {
         contentView.removeConstraints(contentView.constraints)
-        [questionLabel, inputContainer, verificationCode, dateContainer, phoneContainer, selectContainer, textViewContainer, rangeContainer, photoContainer].forEach{ $0?.isHidden = true }
+        [questionLabel, inputContainer, codeInput, dateContainer, phoneContainer, selectContainer, textViewContainer, rangeContainer, photoContainer].forEach{ $0?.isHidden = true }
         contentView.subviews.forEach { $0.removeFromSuperview() }
     }
     
@@ -396,8 +396,8 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
             self.delegate?.OBControllerUpdateValueForKey(key: config.key, value: value!)
         }
         if config.type == .VerificationCode {
-            self.delegate?.OBControllerToggleReadyState(ready: verificationCode.numel == verificationCode.text?.count)
-            if let text = verificationCode.text {
+            self.delegate?.OBControllerToggleReadyState(ready: codeInput.numel == codeInput.text?.count)
+            if let text = codeInput.text {
                 self.delegate?.OBControllerUpdateValueForKey(key: config.key, value: text)
             }
         }
@@ -440,7 +440,7 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
                 phoneInput.becomeFirstResponder()
             }
             if config.type == .VerificationCode {
-                self.verificationCode.becomeFirstResponder()
+                self.codeInput.becomeFirstResponder()
             }
             if config.type == .LargeText {
                 textView.becomeFirstResponder()
@@ -458,7 +458,7 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
                 phoneInput.resignFirstResponder()
             }
             if config.type == .VerificationCode {
-                self.verificationCode.resignFirstResponder()
+                self.codeInput.resignFirstResponder()
             }
             if config.type == .LargeText {
                 textView.resignFirstResponder()
