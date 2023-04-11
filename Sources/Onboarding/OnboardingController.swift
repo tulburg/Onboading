@@ -5,6 +5,7 @@ public final class OnboardingController: UIViewController, UICollectionViewDataS
     
     public var collectionView: UICollectionView!
     var indicator: UIView!
+    public var delegate: OnboardingDelegate?
     var indicatorLastPosition: Int?
     var safeAreaInset: UIEdgeInsets? {
         get {
@@ -29,6 +30,8 @@ public final class OnboardingController: UIViewController, UICollectionViewDataS
     var nextButton: UIButton!
     var prevButton: UIButton!
     var result: NSMutableDictionary = [:]
+    var key: String!
+    var value: Any!
     
     public override func viewDidLoad() {
         super.viewDidLoad()
@@ -156,9 +159,10 @@ public final class OnboardingController: UIViewController, UICollectionViewDataS
         let currentCell = collectionView.cellForItem(at: IndexPath(item: Int(current), section: 0)) as? OnboardingCell
         currentCell?.hideKeyboard()
         guard CGFloat(current + 1) < CGFloat(items.count) else {
-            print(result)
+            delegate?.valueUpdate(self.key, self.value!)
             return
         }
+        delegate?.valueUpdate(self.key, self.value!)
         indicate(Int(current) + 1)
         self.collectionView.scrollToItem(at: IndexPath(row: Int(current) + 1, section: 0), at: .centeredHorizontally, animated: true)
     }
@@ -189,6 +193,8 @@ public final class OnboardingController: UIViewController, UICollectionViewDataS
     
     public func OBControllerUpdateValueForKey(key: String, value: Any) {
         result.setValue(value, forKey: key)
+        self.value = value
+        self.key = key
     }
     
     public func OBControllerValueForKey(key: String) -> Any? {
@@ -231,4 +237,8 @@ public final class OnboardingController: UIViewController, UICollectionViewDataS
     public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
         return 0
     }
+}
+
+public protocol OnboardingDelegate {
+    func valueUpdate(_ key: String, _ value: Any)
 }

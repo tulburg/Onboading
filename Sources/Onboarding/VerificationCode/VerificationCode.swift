@@ -9,7 +9,7 @@
 import UIKit
 
 @available(iOS 12.0, *)
-@IBDesignable open class VerificationCode: UIControl {
+@IBDesignable open class VerificationCode: UIControl, UITextInputTraits {
     public weak var delegate: VerificationCodeProtocol?
     
     @IBInspectable public var itemWidth: CGFloat                = 40
@@ -41,7 +41,7 @@ import UIKit
     
     public var keyboardType: UIKeyboardType                 = .numberPad
     public var keyboardAppearance: UIKeyboardAppearance     = .default
-    public var autocorrectionType: UITextAutocorrectionType = .no
+    public var autocorrectionType: UITextAutocorrectionType = .default
     public var font: UIFont                                 = .systemFont(ofSize: 32, weight: .medium)
     public var allowedCharacterSet: CharacterSet            = .alphanumerics
     public var textContentType: UITextContentType = .oneTimeCode

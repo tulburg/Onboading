@@ -24,7 +24,7 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
     
     public var questionLabel: UILabel!
     var inputContainer: UIView!
-    var verificationCode: VerificationCode!
+    var verificationCode: CodeInputView!
     var dateContainer: UIView!
     var dateLabel: UILabel!
     var selectedDate: Date?
@@ -88,7 +88,7 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
             contentView.add().vertical(24).view(questionLabel).gap(40)
                 .view(verificationCode, 64).end(">=24")
             contentView.constrain(type: .horizontalFill, questionLabel, margin: 24)
-            contentView.add().horizontal(24).view(verificationCode).end(">=0")
+            contentView.add().horizontal(24).view(verificationCode).end(24)
         }
         
         if (config.type == .Date) {
@@ -229,12 +229,12 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
         return container
     }
     
-    public func buildVerificationCode() -> VerificationCode {
-        let verificationCode = VerificationCode(6, itemWidth: (contentView.frame.width / 6) - 16 )
-        verificationCode.textColor = .blackWhite
-        verificationCode.delegate = self
-        
-        return verificationCode
+    public func buildVerificationCode() -> CodeInputView {
+        let codeInput = CodeInputView(numel: 6) { [self] text in
+            delegate?.OBControllerToggleReadyState(ready: true)
+            delegate.OBControllerUpdateValueForKey(key: config.key, value: text)
+        }
+        return codeInput
     }
     
     public func buildDatePicker() -> UIView {
@@ -416,9 +416,9 @@ public class OnboardingCell: UICollectionViewCell, UITextFieldDelegate, Verifica
         if textInput.isFirstResponder {
             textInput.resignFirstResponder()
         }
-        if verificationCode.isFirstResponder {
-            verificationCode.resignFirstResponder()
-        }
+//        if verificationCode.isFirstResponder {
+//            verificationCode.resignFirstResponder()
+//        }
         if phoneInput.isFirstResponder {
             phoneInput.resignFirstResponder()
         }
